@@ -34,12 +34,13 @@ RUN useradd -G www-data,root -u $uid -d /home/$user $user
 RUN mkdir -p /home/$user/.composer && \
     chown -R $user:$user /home/$user
 
+# Set working directory
+WORKDIR /var/www
+
 # Storage permission
 RUN mkdir -p storage/framework storage/logs bootstrap/cache && chmod -R 775 storage bootstrap/cache
 RUN chmod -R 775 storage bootstrap/cache
-RUN chown -R www-data:www-data storage bootstrap/cache  # For Ubuntu/Debian
-
-# Set working directory
-WORKDIR /var/www
+RUN chmod -R 775 storage/framework
+RUN chown -R www-data:www-data storage bootstrap/cache 
 
 USER $user
