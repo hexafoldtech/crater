@@ -53,9 +53,11 @@ COPY supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 # Copy Nginx configuration
 COPY nginx.conf /etc/nginx/nginx.conf
 
+
 # Expose port 8080 for Heroku
 EXPOSE 8080
 
 # Start Supervisor as the main process
-CMD ["supervisord", "-c", "/etc/supervisor/conf.d/supervisord.conf"]
+CMD ["sh", "-c", "envsubst '$$PORT' < /etc/nginx/nginx.conf > /etc/nginx/nginx.conf.tmp && mv /etc/nginx/nginx.conf.tmp /etc/nginx/nginx.conf && supervisord -c /etc/supervisor/conf.d/supervisord.conf"]
+
 
