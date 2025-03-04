@@ -18,20 +18,17 @@ RUN apt-get update && apt-get install -y \
     libzip-dev \
     libmagickwand-dev \
     mariadb-client \
-    supervisor
+    supervisor \
+    gettext
 
 # Clear cache
 RUN apt-get clean && rm -rf /var/lib/apt/lists/*
 
 # Install and enable Imagick extension
-RUN pecl install imagick \
-    && docker-php-ext-enable imagick
+RUN pecl install imagick && docker-php-ext-enable imagick
 
 # Install PHP extensions
 RUN docker-php-ext-install pdo_mysql mbstring zip exif pcntl bcmath gd
-
-RUN apt-get update && apt-get install -y gettext
-
 
 # Get latest Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
@@ -42,13 +39,31 @@ RUN useradd -G www-data,root -u ${uid} -d /home/${user} ${user} \
     && chown -R ${user}:${user} /home/${user}
 
 # Set working directory
-WORKDIR /var/www
+WORKDIR /app
 
-# Set permissions for storage and cache directories
-RUN mkdir -p storage/framework storage/logs bootstrap/cache \
-    && chmod -R 775 storage bootstrap/cache \
-    && chmod -R 775 storage/framework \
-    && chown -R www-data:www-data storage bootstrap/cache 
+# Copy application files
+COPY . .
+
+# 🔹 Ensure `/app/vendor` and Laravel storage directories exist
+RUN mkdir -p /app/vendor /app/storage/framework/{sessions,views,cache} \
+    /app/storage/logs /app/bootstrap/cache \
+    && chmod -R 775 /app/vendor /app/storage /app/bootstrap/cache \
+    && chown -R www-data:www-data /app/vendor /app/storage /app/bootstrap/cache
+
+# 🔹 Ensure .env file exists
+RUN cp .env.example .env || true
+
+RUN mkdir -p storage/framework storage/framework/sessions storage/framework/views storage/framework/cache storage/logs bootstrap/cache && chmod -R 775 storage bootstrap/cache
+
+# 🔹 Install dependencies as ROOT (to avoid permission issues)
+RUN composer install --no-dev --optimize-autoloader
+
+# 🔹 Run Laravel setup commands
+RUN php artisan key:generate \
+    && php artisan config:clear \
+    && php artisan cache:clear \
+    && php artisan view:clear \
+    && php artisan config:cache
 
 # Copy Supervisor configuration
 COPY supervisord.conf /etc/supervisor/conf.d/supervisord.conf
@@ -56,11 +71,15 @@ COPY supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 # Copy Nginx configuration
 COPY nginx.conf /etc/nginx/nginx.conf
 
+# Set correct ownership of project before starting
+RUN chown -R www-data:www-data /app
+
+# Switch to the application user for security
+USER www-data
 
 # Expose port 8080 for Heroku
 EXPOSE 8080
 
 # Start Supervisor as the main process
 CMD ["sh", "-c", "envsubst '$$PORT' < /etc/nginx/nginx.conf > /etc/nginx/nginx.conf.tmp && mv /etc/nginx/nginx.conf.tmp /etc/nginx/nginx.conf && supervisord -c /etc/supervisor/conf.d/supervisord.conf"]
-
 
