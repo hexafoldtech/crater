@@ -32,3 +32,5 @@ services:
 networks:
   crater:
     driver: bridge
+  proxy:
+    external: true
