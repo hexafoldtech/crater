@@ -20,10 +20,8 @@ RUN apt-get update && apt-get install -y \
 # Clear cache
 RUN apt-get clean && rm -rf /var/lib/apt/lists/*
 
-RUN pecl install imagick \
-    && docker-php-ext-enable imagick
-
 # Install PHP extensions
+RUN pecl install imagick && docker-php-ext-enable imagick
 RUN docker-php-ext-install pdo_mysql mbstring zip exif pcntl bcmath gd
 
 # Get latest Composer
@@ -37,4 +35,20 @@ RUN mkdir -p /home/$user/.composer && \
 # Set working directory
 WORKDIR /var/www
 
+# Copy application files
+COPY . .
+
+# Ensure .env exists
+RUN cp .env.example .env || true
+
+# Fix permissions
+RUN chmod -R 775 /var/www \
+    && chown -R www-data:www-data /var/www
+
+# Storage permission
+RUN mkdir -p storage/framework storage/logs bootstrap/cache \
+    && chmod -R 775 storage bootstrap/cache \
+    && chown -R www-data:www-data storage bootstrap/cache
+
+# Switch to the created user
 USER $user
