@@ -4,7 +4,7 @@ services:
   app:
     build:
       args:
-        user: crater-user
+        user: root
         uid: 0
       context: ./
       dockerfile: Dockerfile
