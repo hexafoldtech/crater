@@ -1,6 +1,6 @@
-FROM php:8.2-fpm
+FROM php:8.1-fpm
 
-# Arguments from docker-compose.yml
+# Arguments defined in docker-compose.yml
 ARG user
 ARG uid
 
@@ -20,38 +20,21 @@ RUN apt-get update && apt-get install -y \
 # Clear cache
 RUN apt-get clean && rm -rf /var/lib/apt/lists/*
 
+RUN pecl install imagick \
+    && docker-php-ext-enable imagick
+
 # Install PHP extensions
-RUN pecl install imagick && docker-php-ext-enable imagick
 RUN docker-php-ext-install pdo_mysql mbstring zip exif pcntl bcmath gd
 
 # Get latest Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
+# Create system user to run Composer and Artisan Commands
+RUN useradd -G www-data,root -u $uid -d /home/$user $user
+RUN mkdir -p /home/$user/.composer && \
+    chown -R $user:$user /home/$user
+
 # Set working directory
 WORKDIR /var/www
 
-# Copy application files
-COPY . .
-
-# Ensure .env exists
-RUN cp .env.example .env
-
-# Install Laravel dependencies
-RUN composer install --no-dev --optimize-autoloader
-
-# Set permissions
-RUN mkdir -p storage/framework storage/logs bootstrap/cache \
-    && chmod -R 775 storage bootstrap/cache \
-    && chown -R www-data:www-data storage bootstrap/cache
-
-# Create system user
-RUN useradd -G www-data,root -u $uid -d /home/$user $user
-RUN mkdir -p /home/$user/.composer && chown -R $user:$user /home/$user
-
-# Run entrypoint script
-COPY docker-compose/entrypoint.sh /entrypoint.sh
-RUN chmod +x /entrypoint.sh
-
 USER $user
-
-ENTRYPOINT ["/entrypoint.sh"]
