@@ -16,35 +16,7 @@ services:
       - ./docker-compose/php/uploads.ini:/usr/local/etc/php/conf.d/uploads.ini:rw,delegated
     networks:
       - crater
-
-  db:
-    image: mariadb
-    restart: always
-    volumes:
-      - db:/var/lib/mysql
-      # If you want to persist data on the host, comment the line above this one...
-      # and uncomment the line under this one.
-      #- ./docker-compose/db/data:/var/lib/mysql:rw,delegated
-    environment:
-      MYSQL_USER: crater
-      MYSQL_PASSWORD: crater
-      MYSQL_DATABASE: crater
-      MYSQL_ROOT_PASSWORD: crater
-    ports:
-      - '33006:3306'
-    networks:
-      - crater
-
-  nginx:
-    image: nginx:1.17-alpine
-    restart: unless-stopped
-    ports:
-      - 8080:80
-    volumes:
-      - ./:/var/www
-      - ./docker-compose/nginx:/etc/nginx/conf.d/
-    networks:
-      - crater
+      - proxy
 
   cron:
     build:
@@ -54,9 +26,8 @@ services:
       - ./:/var/www
     networks:
       - crater
+      - proxy
 
-volumes:
-  db:
 
 networks:
   crater:
