@@ -74,12 +74,8 @@ COPY nginx.conf /etc/nginx/nginx.conf
 # Set correct ownership of project before starting
 RUN chown -R www-data:www-data /app
 
-# Switch to the application user for security
-USER www-data
+# 🔹 Expose Nginx port
+EXPOSE 80
 
-# Expose port 8080 for Heroku
-EXPOSE 8080
-
-# Start Supervisor as the main process
-CMD ["sh", "-c", "envsubst '$$PORT' < /etc/nginx/nginx.conf > /etc/nginx/nginx.conf.tmp && mv /etc/nginx/nginx.conf.tmp /etc/nginx/nginx.conf && supervisord -c /etc/supervisor/conf.d/supervisord.conf"]
-
+# 🔹 Start Nginx and Supervisor
+CMD ["sh", "-c", "service nginx start && supervisord -c /etc/supervisor/conf.d/supervisord.conf"]
