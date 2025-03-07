@@ -16,9 +16,7 @@ services:
       - ./docker-compose/php/uploads.ini:/usr/local/etc/php/conf.d/uploads.ini:rw,delegated
     networks:
       - crater
-    depends_on:
-      - nginx
-
+      
   nginx:
     image: nginx:1.17-alpine
     restart: unless-stopped
