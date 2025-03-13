@@ -15,7 +15,7 @@ services:
       - ./:/var/www
       - ./docker-compose/php/uploads.ini:/usr/local/etc/php/conf.d/uploads.ini:rw,delegated
     networks:
-      - crater
+      - nova_service
     ports:
       - "8080:80"
     depends_on:
@@ -36,7 +36,7 @@ services:
     ports:
       - "33006:3306"
     networks:
-      - crater
+      - nova_service
 
   cron:
     build:
@@ -45,7 +45,7 @@ services:
     volumes:
       - ./:/var/www
     networks:
-      - crater
+      - nova_service
 
   npm_app:
     image: 'jc21/nginx-proxy-manager:latest'
@@ -60,7 +60,7 @@ services:
       DB_MYSQL_PASSWORD: "npm"
       DB_MYSQL_NAME: "npm"
     networks:
-      - proxy
+      - nova_service
     volumes:
       - ./data:/data
       - ./letsencrypt:/etc/letsencrypt
@@ -75,15 +75,12 @@ services:
       MYSQL_USER: 'npm'
       MYSQL_PASSWORD: 'npm'
     networks:
-      - proxy
+      - nova_service
     volumes:
       - ./mysql:/var/lib/mysql
 
 networks:
-  crater:
+  nova_service:
     driver: bridge
-  proxy:
-    external: true
-
 volumes:
   db_data:
