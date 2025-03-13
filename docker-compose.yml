@@ -1,5 +1,6 @@
+version: '3.8'
+
 services:
-  
   app:
     build:
       args:
@@ -14,9 +15,28 @@ services:
       - ./:/var/www
       - ./docker-compose/php/uploads.ini:/usr/local/etc/php/conf.d/uploads.ini:rw,delegated
     networks:
-      - nova_service
+      - crater
     ports:
       - "8080:80"
+    depends_on:
+      - db
+
+  db:
+    image: mariadb:latest
+    restart: always
+    volumes:
+      - db_data:/var/lib/mysql
+      # Uncomment the line below if you want to persist data on the host
+      # - ./docker-compose/db/data:/var/lib/mysql:rw,delegated
+    environment:
+      MYSQL_USER: crater
+      MYSQL_PASSWORD: crater
+      MYSQL_DATABASE: crater
+      MYSQL_ROOT_PASSWORD: crater
+    ports:
+      - "33006:3306"
+    networks:
+      - crater
 
   cron:
     build:
@@ -25,7 +45,7 @@ services:
     volumes:
       - ./:/var/www
     networks:
-      - nova_service
+      - crater
 
   npm_app:
     image: 'jc21/nginx-proxy-manager:latest'
@@ -40,7 +60,7 @@ services:
       DB_MYSQL_PASSWORD: "npm"
       DB_MYSQL_NAME: "npm"
     networks:
-      - nova_service
+      - proxy
     volumes:
       - ./data:/data
       - ./letsencrypt:/etc/letsencrypt
@@ -48,19 +68,22 @@ services:
       - npm_db
 
   npm_db:
-      image: 'jc21/mariadb-aria:latest'
-      environment:
-        MYSQL_ROOT_PASSWORD: 'npm'
-        MYSQL_DATABASE: 'npm'
-        MYSQL_USER: 'npm'
-        MYSQL_PASSWORD: 'npm'
-      networks:
-        - nova_service
-      volumes:
-        - ./mysql:/var/lib/mysql
+    image: 'jc21/mariadb-aria:latest'
+    environment:
+      MYSQL_ROOT_PASSWORD: 'npm'
+      MYSQL_DATABASE: 'npm'
+      MYSQL_USER: 'npm'
+      MYSQL_PASSWORD: 'npm'
+    networks:
+      - proxy
+    volumes:
+      - ./mysql:/var/lib/mysql
 
 networks:
-  nova_service:
+  crater:
     driver: bridge
   proxy:
     external: true
+
+volumes:
+  db_data:
