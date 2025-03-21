@@ -81,4 +81,4 @@ RUN chown -R www-data:www-data /app
 EXPOSE 80
 
 # 🔹 Start Nginx and Supervisor
-CMD ["sh", "-c", "service nginx start && supervisord -c /etc/supervisor/conf.d/supervisord.conf"]
+CMD ["supervisord", "-c", "/etc/supervisor/conf.d/supervisord.conf"]
