@@ -43,7 +43,7 @@ services:
       context: ./
       dockerfile: ./docker-compose/cron.dockerfile
     volumes:
-      - ./:/var/www
+      - ./:/app
     networks:
       - nova_service
 
