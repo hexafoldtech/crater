@@ -46,10 +46,12 @@ WORKDIR /app
 COPY . .
 
 # 🔹 Ensure `/app/vendor` and Laravel storage directories exist
-RUN mkdir -p /app/vendor /app/storage/framework/{sessions,views,cache} \
-    /app/storage/logs /app/bootstrap/cache \
-    && chmod -R 775 /app/vendor /app/storage /app/bootstrap/cache \
-    && chown -R www-data:www-data /app/vendor /app/storage /app/bootstrap/cache
+RUN mkdir -p /app/vendor \
+    /app/storage/framework/{sessions,views,cache} \
+    /app/storage/logs \
+    /app/bootstrap/cache \
+ && chmod -R 775 /app/vendor /app/storage /app/bootstrap/cache \
+ && chown -R www-data:www-data /app/vendor /app/storage /app/bootstrap/cache
 
 # 🔹 Ensure .env file exists
 RUN cp .env.example .env || true
